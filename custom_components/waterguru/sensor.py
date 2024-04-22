@@ -29,6 +29,12 @@ from .const import DOMAIN
 from .waterguru import WaterGuruDevice
 
 SENSORS: dict[str, SensorEntityDescription] = {
+    "SKIMMER_FLOW": SensorEntityDescription(
+        key="SKIMMER_FLOW",
+        name="Skimmer Flow",
+        state_class = SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="gpm",
+    ),
     "FREE_CL": SensorEntityDescription(
         key="FREE_CL",
         name="Free Chlorine",

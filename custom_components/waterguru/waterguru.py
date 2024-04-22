@@ -91,7 +91,10 @@ class WaterGuruDevice:
             'ip': self._data['pods'][0]['pod']['ipAddr'],
         }
         for m in self._data['measurements']:
-            self._sensors[m['type']] = m['floatValue']
+            if 'floatValue' in m:
+                self._sensors[m['type']] = m['floatValue']
+            elif 'intValue' in m:
+                self._sensors[m['type']] = m['intValue']
         for r in self._data['pods'][0]['refillables']:
             if r['type'] == 'BATT':
                 self._sensors['battery'] = r['pctLeft']
