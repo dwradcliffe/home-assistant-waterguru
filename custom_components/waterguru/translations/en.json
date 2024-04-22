@@ -1,0 +1,21 @@
+{
+    "config": {
+      "flow_title": "WaterGuru",
+      "step": {
+        "user": {
+          "title": "Connect to WaterGuru",
+          "data": {
+            "username": "Username",
+            "password": "Password"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "unknown": "Unexpected Error"
+      },
+      "abort": {
+        "already_configured": "Account is already configured"
+      }
+    }
+  }

@@ -1,0 +1,11 @@
+{
+  "domain": "waterguru",
+  "name": "WaterGuru",
+  "config_flow": true,
+  "documentation": "https://github.com/dwradcliffe/home-assistant-waterguru",
+  "requirements": ["requests_aws4auth", "boto3", "warrant"],
+  "dependencies": [],
+  "codeowners": ["dwradcliffe"],
+  "iot_class": "cloud_polling",
+  "version": "0.0.1"
+}
