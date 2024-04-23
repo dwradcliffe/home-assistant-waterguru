@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "FREE_CL": {
+        "default": "mdi:test-tube"
+      },
+      "TA": {
+        "default": "mdi:test-tube"
+      },
+      "CH": {
+        "default": "mdi:test-tube"
+      },
+      "CYA": {
+        "default": "mdi:test-tube"
+      },
+      "TH": {
+        "default": "mdi:test-tube"
+      },
+      "SKIMMER_FLOW": {
+        "default": "mdi:waves"
+      },
+      "cassette": {
+        "default": "mdi:cassette"
+      },
+      "ip": {
+        "default": "mdi:ip-network"
+      },
+      "alert": {
+        "default": "mdi:alert-outline",
+        "state": {
+          "Ok": "mdi:alert-circle-check-outline"
+        }
+      }
+    }
+  }
+}

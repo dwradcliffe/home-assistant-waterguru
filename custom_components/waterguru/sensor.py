@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -28,85 +27,49 @@ from . import WaterGuruDataCoordinatorType
 from .const import DOMAIN
 from .waterguru import WaterGuruDevice
 
-SENSORS: dict[str, SensorEntityDescription] = {
-    "SKIMMER_FLOW": SensorEntityDescription(
-        key="SKIMMER_FLOW",
-        name="Skimmer Flow",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="gpm",
-    ),
-    "FREE_CL": SensorEntityDescription(
-        key="FREE_CL",
-        name="Free Chlorine",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:flask",
-    ),
-    "PH": SensorEntityDescription(
-        key="PH",
-        device_class=SensorDeviceClass.PH,
-        state_class = SensorStateClass.MEASUREMENT,
-    ),
-    "TA": SensorEntityDescription(
-        key="TA",
-        name="Total Alkalinity",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    "CH": SensorEntityDescription(
-        key="CH",
-        name="Calcium Hardness",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    "CYA": SensorEntityDescription(
-        key="CYA",
-        name="Cyanuric Acid",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    "SALT": SensorEntityDescription(
-        key="SALT",
-        name="Salt",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    "PHOS": SensorEntityDescription(
-        key="PHOS",
-        name="Phosphates",
-        state_class = SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    "SI": SensorEntityDescription(
-        key="SI",
-        name="Saturation Index",
-        state_class = SensorStateClass.MEASUREMENT,
-    ),
+STANDARD_SENSORS: dict[str, SensorEntityDescription] = {
     "temp": SensorEntityDescription(
         key="temp",
         name="Water Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class = SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
-        state_class = SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cassette": SensorEntityDescription(
+        key="cassette",
+        translation_key="cassette",
+        name="Cassette Remaining",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cassette_days_remaining": SensorEntityDescription(
+        key="cassette_days_remaining",
+        translation_key="cassette",
+        name="Cassette Days Remaining",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        state_class = SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ip": SensorEntityDescription(
         key="ip",
+        translation_key="ip",
         name="IP Address",
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -128,12 +91,43 @@ async def async_setup_entry(
         WaterGuruSensor(
             coordinator,
             waterguru_device,
-            SENSORS[sensor_types],
+            STANDARD_SENSORS[sensor_types],
         )
         for waterguru_device in coordinator.data.values()
-        for sensor_types in waterguru_device.sensor_types
-        if sensor_types in SENSORS
+        for sensor_types in waterguru_device.sensors
+        if sensor_types in STANDARD_SENSORS
     ]
+
+    for waterguru_device in coordinator.data.values():
+        for measurement in waterguru_device.measurements.values():
+            entities.append(
+                WaterGuruSensor(
+                    coordinator,
+                    waterguru_device,
+                    SensorEntityDescription(
+                        key=measurement["type"],
+                        translation_key=measurement["type"],
+                        name=measurement["title"],
+                        device_class=(SensorDeviceClass.PH if measurement["type"] == "PH" else None),
+                        state_class=SensorStateClass.MEASUREMENT,
+                        native_unit_of_measurement=measurement["cfg"].get("unit"),
+                        suggested_display_precision=measurement["cfg"].get("decPlaces"),
+                    )
+                )
+            )
+
+            entities.append(
+                WaterGuruAlertSensor(
+                    coordinator,
+                    waterguru_device,
+                    SensorEntityDescription(
+                        key=measurement["type"] + "_alert",
+                        translation_key="alert",
+                        name=measurement["title"] + " Alert",
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                )
+            )
     async_add_entities(entities)
 
 
@@ -170,4 +164,21 @@ class WaterGuruSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
+
+        if self.entity_description.key in STANDARD_SENSORS:
+            return self.coordinator.data[self._id].sensors[self.entity_description.key]
+
+        m = self.coordinator.data[self._id].measurements[self.entity_description.key]
+        return m.get("floatValue") or m.get("intValue")
+
+class WaterGuruAlertSensor(WaterGuruSensor):
+    """Representation of a WaterGuru Sensor that shows the alert status."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        m = self.coordinator.data[self._id].measurements[self.entity_description.key[:-6]]
+        if m.get("status") == "GREEN":
+            return "Ok"
+        return m.get("firstAlertCondition")

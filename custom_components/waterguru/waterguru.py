@@ -85,21 +85,18 @@ class WaterGuruDevice:
         """Initialize the device."""
         self._data = waterBodyData
         self._sensors = dict[str, str]
-        self._sensors = {
+        self._standard_sensors = {
             'temp': self._data['waterTemp'],
             'rssi': self._data['pods'][0]['rssiInfo']['rssi'],
             'ip': self._data['pods'][0]['pod']['ipAddr'],
         }
-        for m in self._data['measurements']:
-            if 'floatValue' in m:
-                self._sensors[m['type']] = m['floatValue']
-            elif 'intValue' in m:
-                self._sensors[m['type']] = m['intValue']
         for r in self._data['pods'][0]['refillables']:
             if r['type'] == 'BATT':
-                self._sensors['battery'] = r['pctLeft']
+                self._standard_sensors['battery'] = r['pctLeft']
             if r['type'] == 'LAB':
-                self._sensors['cassette'] = r['pctLeft']
+                self._standard_sensors['cassette'] = r['pctLeft']
+                self._standard_sensors['cassette_days_remaining'] = (int(r['amountLeft'])/6)
+        self._measurements = {measurement['type']: measurement for measurement in self._data['measurements']}
 
     @property
     def device_id(self):
@@ -127,11 +124,11 @@ class WaterGuruDevice:
         return self._data['pods'][0]['pod']['fwUpdateVersion']
 
     @property
-    def sensor_types(self):
-        """Return the sensor types of the device."""
-        return self._sensors.keys()
-
-    @property
     def sensors(self):
         """Return the sensors of the device."""
-        return self._sensors
+        return self._standard_sensors
+
+    @property
+    def measurements(self):
+        """Return the measurements of the device."""
+        return self._measurements
