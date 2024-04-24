@@ -17,7 +17,7 @@ from .waterguru import WaterGuru, WaterGuruApiError, WaterGuruDevice
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-INTERVAL = timedelta(minutes=10)
+INTERVAL = timedelta(minutes=60)
 
 WaterGuruDataCoordinatorType = DataUpdateCoordinator[dict[str, WaterGuruDevice]]
 
