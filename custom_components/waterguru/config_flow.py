@@ -33,6 +33,9 @@ class WaterguruConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get configuration from the user."""
         errors = {}
         if user_input:
+            if user_input[CONF_USERNAME] is not None:
+                user_input[CONF_USERNAME] = user_input[CONF_USERNAME].lower()
+
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             try:
@@ -45,7 +48,7 @@ class WaterguruConfigFlow(ConfigFlow, domain=DOMAIN):
             except WaterGuruApiError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
