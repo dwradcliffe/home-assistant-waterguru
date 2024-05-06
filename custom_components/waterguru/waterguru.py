@@ -95,7 +95,7 @@ class WaterGuruDevice:
                 self._standard_sensors['battery'] = r['pctLeft']
             if r['type'] == 'LAB':
                 self._standard_sensors['cassette'] = r['pctLeft']
-                self._standard_sensors['cassette_days_remaining'] = (int(r['amountLeft'])/6)
+                self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0])
         self._measurements = {measurement['type']: measurement for measurement in self._data['measurements']}
 
     @property
