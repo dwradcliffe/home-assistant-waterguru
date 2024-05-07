@@ -2,7 +2,11 @@
 
 This is a Home Assistant integration for the WaterGuru Automated Smart Pool Water Monitor product.
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=dwradcliffe&repository=home-assistant-waterguru)
+
 NOTE: This is not any kind of official integration or support. Use at your own risk.
+
+This integration requires Home Assistant 2024.4 or later.
 
 ## Usage
 1. Install HACS if you haven't already (see [installation guide](https://hacs.xyz/docs/setup/prerequisites)).
