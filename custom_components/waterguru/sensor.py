@@ -169,7 +169,11 @@ class WaterGuruSensor(
             return self.coordinator.data[self._id].sensors[self.entity_description.key]
 
         m = self.coordinator.data[self._id].measurements[self.entity_description.key]
-        return m.get("floatValue") or m.get("intValue")
+
+        if m.get("floatValue") is None:
+            return m.get("intValue")
+
+        return m.get("floatValue")
 
 class WaterGuruAlertSensor(WaterGuruSensor):
     """Representation of a WaterGuru Sensor that shows the alert status."""
