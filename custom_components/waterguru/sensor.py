@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WaterGuruDataCoordinatorType
-from .const import DOMAIN
+from .const import DOMAIN, WaterGuruEntityAttributes
 from .waterguru import WaterGuruDevice
 
 STANDARD_SENSORS: dict[str, SensorEntityDescription] = {
@@ -92,6 +92,7 @@ async def async_setup_entry(
             coordinator,
             waterguru_device,
             STANDARD_SENSORS[sensor_types],
+            STANDARD_SENSORS[sensor_types].key,
         )
         for waterguru_device in coordinator.data.values()
         for sensor_types in waterguru_device.sensors
@@ -112,7 +113,8 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=measurement["cfg"].get("unit"),
                         suggested_display_precision=measurement["cfg"].get("decPlaces"),
-                    )
+                    ),
+                    measurement["type"],
                 )
             )
 
@@ -125,7 +127,8 @@ async def async_setup_entry(
                         translation_key="alert",
                         name=measurement["title"] + " Alert",
                         entity_category=EntityCategory.DIAGNOSTIC,
-                    )
+                    ),
+                    measurement["type"]
                 )
             )
     async_add_entities(entities)
@@ -138,14 +141,26 @@ class WaterGuruSensor(
 
     _attr_has_entity_name = True
 
+    _unrecorded_attributes = frozenset(
+        {
+            WaterGuruEntityAttributes.LAST_MEASUREMENT,
+            WaterGuruEntityAttributes.DESC,
+            WaterGuruEntityAttributes.STATUS_COLOR,
+            WaterGuruEntityAttributes.ADVICE,
+        }
+    )
+
     def __init__(
         self,
         coordinator: WaterGuruDataCoordinatorType,
         waterguru_device: WaterGuruDevice,
         entity_description: SensorEntityDescription,
+        waterguru_key: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+
+        self._waterguru_key = waterguru_key
 
         self.entity_description = entity_description
 
@@ -162,13 +177,33 @@ class WaterGuruSensor(
         )
 
     @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return entity specific state attributes."""
+
+        if self._waterguru_key in STANDARD_SENSORS:
+            return None
+
+        m = self.coordinator.data[self._id].measurements[self._waterguru_key]
+
+        a = {
+            WaterGuruEntityAttributes.LAST_MEASUREMENT: m.get("measureTime"),
+            WaterGuruEntityAttributes.DESC: m.get("cfg").get("desc"),
+            WaterGuruEntityAttributes.STATUS_COLOR: m.get("status"),
+        }
+
+        if m.get("alerts") is not None and len(m.get("alerts")) > 0 and m.get("alerts")[0].get("advice") is not None:
+            a[WaterGuruEntityAttributes.ADVICE] = m.get("alerts")[0].get("advice").get("action").get("summary")
+
+        return a
+
+    @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 
-        if self.entity_description.key in STANDARD_SENSORS:
-            return self.coordinator.data[self._id].sensors[self.entity_description.key]
+        if self._waterguru_key in STANDARD_SENSORS:
+            return self.coordinator.data[self._id].sensors[self._waterguru_key]
 
-        m = self.coordinator.data[self._id].measurements[self.entity_description.key]
+        m = self.coordinator.data[self._id].measurements[self._waterguru_key]
 
         if m.get("floatValue") is None:
             return m.get("intValue")
@@ -182,7 +217,7 @@ class WaterGuruAlertSensor(WaterGuruSensor):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 
-        m = self.coordinator.data[self._id].measurements[self.entity_description.key[:-6]]
+        m = self.coordinator.data[self._id].measurements[self._waterguru_key]
         if m.get("status") == "GREEN":
             return "Ok"
         return m.get("firstAlertCondition")
