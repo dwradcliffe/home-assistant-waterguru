@@ -88,7 +88,6 @@ class WaterGuruDevice:
         self._standard_sensors = {
             'temp': self._data['waterTemp'],
             'rssi': self._data['pods'][0]['rssiInfo']['rssi'],
-            'ip': self._data['pods'][0]['pod']['ipAddr'],
         }
         for r in self._data['pods'][0]['refillables']:
             if r['type'] == 'BATT':

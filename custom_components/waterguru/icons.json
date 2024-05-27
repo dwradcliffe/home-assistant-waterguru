@@ -22,9 +22,6 @@
       "cassette": {
         "default": "mdi:cassette"
       },
-      "ip": {
-        "default": "mdi:ip-network"
-      },
       "alert": {
         "default": "mdi:alert-outline",
         "state": {

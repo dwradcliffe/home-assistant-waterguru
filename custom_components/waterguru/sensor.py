@@ -66,13 +66,6 @@ STANDARD_SENSORS: dict[str, SensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ip": SensorEntityDescription(
-        key="ip",
-        translation_key="ip",
-        name="IP Address",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
