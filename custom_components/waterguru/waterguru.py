@@ -132,3 +132,8 @@ class WaterGuruDevice:
     def measurements(self):
         """Return the measurements of the device."""
         return self._measurements
+
+    @property
+    def status(self):
+        """Return the status of the device."""
+        return self._data['status']

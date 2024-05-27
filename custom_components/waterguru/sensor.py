@@ -131,6 +131,21 @@ async def async_setup_entry(
                     measurement["type"]
                 )
             )
+
+    entities.append(
+        WaterGuruOverallStatusSensor(
+            coordinator,
+            waterguru_device,
+            SensorEntityDescription(
+                key="status",
+                translation_key="alert",
+                name="Status",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            None,
+        )
+    )
+
     async_add_entities(entities)
 
 
@@ -209,6 +224,21 @@ class WaterGuruSensor(
             return m.get("intValue")
 
         return m.get("floatValue")
+
+class WaterGuruOverallStatusSensor(WaterGuruSensor):
+    """Representation of a WaterGuru Sensor that shows the overall pool status."""
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return entity specific state attributes."""
+
+        return None
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        return self.coordinator.data[self._id].status
 
 class WaterGuruAlertSensor(WaterGuruSensor):
     """Representation of a WaterGuru Sensor that shows the alert status."""
