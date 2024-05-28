@@ -136,3 +136,8 @@ class WaterGuruDevice:
     def status(self):
         """Return the status of the device."""
         return self._data['status']
+
+    @property
+    def last_measurement_time(self):
+        """Return the last measurement time."""
+        return self._data['latestMeasureTime']

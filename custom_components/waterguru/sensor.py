@@ -22,6 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import WaterGuruDataCoordinatorType
 from .const import DOMAIN, WaterGuruEntityAttributes
@@ -135,17 +136,29 @@ async def async_setup_entry(
                 name="Status",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
-            None,
+        )
+    )
+
+    entities.append(
+        WaterGuruLastMeasurementSensor(
+            coordinator,
+            waterguru_device,
+            SensorEntityDescription(
+                key="last_measurement",
+                name="Last Measurement",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                device_class=SensorDeviceClass.TIMESTAMP,
+            ),
         )
     )
 
     async_add_entities(entities)
 
 
-class WaterGuruSensor(
+class WaterGuruBaseSensor(
     CoordinatorEntity[WaterGuruDataCoordinatorType], SensorEntity
 ):
-    """Representation of a WaterGuru Sensor device."""
+    """Base class for a WaterGuru sensor."""
 
     _attr_has_entity_name = True
 
@@ -163,7 +176,7 @@ class WaterGuruSensor(
         coordinator: WaterGuruDataCoordinatorType,
         waterguru_device: WaterGuruDevice,
         entity_description: SensorEntityDescription,
-        waterguru_key: str,
+        waterguru_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -183,6 +196,9 @@ class WaterGuruSensor(
             serial_number=waterguru_device.serial_number,
             sw_version=waterguru_device.firmware_version,
         )
+
+class WaterGuruSensor(WaterGuruBaseSensor):
+    """Representation of a WaterGuru sensor."""
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -218,14 +234,8 @@ class WaterGuruSensor(
 
         return m.get("floatValue")
 
-class WaterGuruOverallStatusSensor(WaterGuruSensor):
+class WaterGuruOverallStatusSensor(WaterGuruBaseSensor):
     """Representation of a WaterGuru Sensor that shows the overall pool status."""
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return entity specific state attributes."""
-
-        return None
 
     @property
     def native_value(self) -> StateType:
@@ -244,3 +254,13 @@ class WaterGuruAlertSensor(WaterGuruSensor):
         if m.get("status") == "GREEN":
             return "Ok"
         return m.get("firstAlertCondition")
+
+class WaterGuruLastMeasurementSensor(WaterGuruBaseSensor):
+    """Representation of a WaterGuru Sensor that shows the last time the water was tested."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        strTs = self.coordinator.data[self._id].last_measurement_time
+        return dt_util.parse_datetime(strTs)
