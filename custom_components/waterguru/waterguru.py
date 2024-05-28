@@ -90,11 +90,15 @@ class WaterGuruDevice:
             'rssi': self._data['pods'][0]['rssiInfo']['rssi'],
         }
         for r in self._data['pods'][0]['refillables']:
+            _LOGGER.debug("refillable: %s", r)
             if r['type'] == 'BATT':
                 self._standard_sensors['battery'] = r['pctLeft']
             if r['type'] == 'LAB':
                 self._standard_sensors['cassette'] = r['pctLeft']
-                self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0])
+                if "days" in r['timeLeftText']:
+                    self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0])
+                else:
+                    self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0]) * 30
         self._measurements = {measurement['type']: measurement for measurement in self._data['measurements']}
 
     @property
