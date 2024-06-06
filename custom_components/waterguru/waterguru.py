@@ -90,7 +90,6 @@ class WaterGuruDevice:
             'rssi': self._data['pods'][0]['rssiInfo']['rssi'],
         }
         for r in self._data['pods'][0]['refillables']:
-            _LOGGER.debug("refillable: %s", r)
             if r['type'] == 'BATT':
                 self._standard_sensors['battery'] = r['pctLeft']
             if r['type'] == 'LAB':
@@ -145,3 +144,17 @@ class WaterGuruDevice:
     def last_measurement_time(self):
         """Return the last measurement time."""
         return self._data['latestMeasureTime']
+
+    @property
+    def diagnostics(self):
+        """Return the diagnostics of the device."""
+        return {
+            "name": self.name,
+            "product_name": self.product_name,
+            "firmware_version": self.firmware_version,
+            "status": self.status,
+            "last_measurement_time": self.last_measurement_time,
+            "standard_sensors": self.sensors,
+            "measurements": self.measurements,
+            "raw_data": self._data
+        }
