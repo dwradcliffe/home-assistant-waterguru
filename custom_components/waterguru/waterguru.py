@@ -94,10 +94,12 @@ class WaterGuruDevice:
                 self._standard_sensors['battery'] = r['pctLeft']
             if r['type'] == 'LAB':
                 self._standard_sensors['cassette'] = r['pctLeft']
-                if "days" in r['timeLeftText']:
-                    self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0])
-                else:
-                    self._standard_sensors['cassette_days_remaining'] = int(r['timeLeftText'].split()[0]) * 30
+                number = int(r['timeLeftText'].split()[0])
+                if "weeks" in r['timeLeftText']:
+                    number = number * 7
+                elif "months" in r['timeLeftText']:
+                    number = number * 30
+                self._standard_sensors['cassette_days_remaining'] = number
         self._measurements = {measurement['type']: measurement for measurement in self._data['measurements']}
 
     @property
