@@ -50,6 +50,7 @@ STANDARD_SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:cassette",
     ),
     "cassette_days_remaining": SensorEntityDescription(
         key="cassette_days_remaining",
@@ -58,6 +59,7 @@ STANDARD_SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
+        icon="mdi:cassette",
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
@@ -118,7 +120,6 @@ async def async_setup_entry(
                     waterguru_device,
                     SensorEntityDescription(
                         key=measurement["type"] + "_alert",
-                        translation_key="alert",
                         name=measurement["title"] + " Alert",
                         entity_category=EntityCategory.DIAGNOSTIC,
                     ),
@@ -185,6 +186,12 @@ class WaterGuruBaseSensor(
 
         self.entity_description = entity_description
 
+        if entity_description.icon is None and entity_description.device_class is None:
+            if waterguru_key == "SKIMMER_FLOW":
+                self._attr_icon = "mdi:waves"
+            else:
+                self._attr_icon = "mdi:test-tube"
+
         self._attr_unique_id = f"{waterguru_device.device_id}_{entity_description.key}"
         self._id = waterguru_device.device_id
         self._attr_device_info = DeviceInfo(
@@ -243,6 +250,14 @@ class WaterGuruOverallStatusSensor(WaterGuruBaseSensor):
 
         return self.coordinator.data[self._id].status
 
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+
+        if self.coordinator.data[self._id].status == "GREEN":
+            return "mdi:alert-circle-check-outline"
+        return "mdi:alert-outline"
+
 class WaterGuruAlertSensor(WaterGuruSensor):
     """Representation of a WaterGuru Sensor that shows the alert status."""
 
@@ -254,6 +269,15 @@ class WaterGuruAlertSensor(WaterGuruSensor):
         if m.get("status") == "GREEN":
             return "Ok"
         return m.get("firstAlertCondition")
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+
+        m = self.coordinator.data[self._id].measurements[self._waterguru_key]
+        if m.get("status") == "GREEN":
+            return "mdi:alert-circle-check-outline"
+        return "mdi:alert-outline"
 
 class WaterGuruLastMeasurementSensor(WaterGuruBaseSensor):
     """Representation of a WaterGuru Sensor that shows the last time the water was tested."""
