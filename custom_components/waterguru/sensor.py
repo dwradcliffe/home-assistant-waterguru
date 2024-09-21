@@ -287,4 +287,6 @@ class WaterGuruLastMeasurementSensor(WaterGuruBaseSensor):
         """Return the value reported by the sensor."""
 
         strTs = self.coordinator.data[self._id].last_measurement_time
+        if strTs is None:
+            return None
         return dt_util.parse_datetime(strTs)
