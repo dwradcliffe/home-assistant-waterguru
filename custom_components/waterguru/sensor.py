@@ -222,8 +222,11 @@ class WaterGuruSensor(WaterGuruBaseSensor):
             WaterGuruEntityAttributes.STATUS_COLOR: m.get("status"),
         }
 
-        if m.get("alerts") is not None and len(m.get("alerts")) > 0 and m.get("alerts")[0].get("advice") is not None:
-            a[WaterGuruEntityAttributes.ADVICE] = m.get("alerts")[0].get("advice").get("action").get("summary")
+        alerts = m.get("alerts")
+        if alerts:
+            advice = alerts[0].get("advice", {}).get("action", {}).get("summary")
+            if advice is not None:
+                a[WaterGuruEntityAttributes.ADVICE] = advice
 
         return a
 
