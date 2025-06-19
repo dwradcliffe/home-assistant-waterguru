@@ -214,11 +214,16 @@ class WaterGuruSensor(WaterGuruBaseSensor):
         if self._waterguru_key in STANDARD_SENSORS:
             return None
 
+        # Check if the measurement exists before accessing it
+        if (self._id not in self.coordinator.data or
+            self._waterguru_key not in self.coordinator.data[self._id].measurements):
+            return None
+
         m = self.coordinator.data[self._id].measurements[self._waterguru_key]
 
         a = {
             WaterGuruEntityAttributes.LAST_MEASUREMENT: m.get("measureTime"),
-            WaterGuruEntityAttributes.DESC: m.get("cfg").get("desc"),
+            WaterGuruEntityAttributes.DESC: m.get("cfg", {}).get("desc"),
             WaterGuruEntityAttributes.STATUS_COLOR: m.get("status"),
         }
 
@@ -235,7 +240,16 @@ class WaterGuruSensor(WaterGuruBaseSensor):
         """Return the value reported by the sensor."""
 
         if self._waterguru_key in STANDARD_SENSORS:
+            # Check if the sensor data exists
+            if (self._id not in self.coordinator.data or
+                self._waterguru_key not in self.coordinator.data[self._id].sensors):
+                return None
             return self.coordinator.data[self._id].sensors[self._waterguru_key]
+
+        # Check if the measurement exists before accessing it
+        if (self._id not in self.coordinator.data or
+            self._waterguru_key not in self.coordinator.data[self._id].measurements):
+            return None
 
         m = self.coordinator.data[self._id].measurements[self._waterguru_key]
 
@@ -251,11 +265,19 @@ class WaterGuruOverallStatusSensor(WaterGuruBaseSensor):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 
+        # Check if the device data exists
+        if self._id not in self.coordinator.data:
+            return None
+
         return self.coordinator.data[self._id].status
 
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
+
+        # Check if the device data exists
+        if self._id not in self.coordinator.data:
+            return "mdi:alert-outline"
 
         if self.coordinator.data[self._id].status == "GREEN":
             return "mdi:alert-circle-check-outline"
@@ -268,6 +290,11 @@ class WaterGuruAlertSensor(WaterGuruSensor):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 
+        # Check if the measurement exists before accessing it
+        if (self._id not in self.coordinator.data or
+            self._waterguru_key not in self.coordinator.data[self._id].measurements):
+            return None
+
         m = self.coordinator.data[self._id].measurements[self._waterguru_key]
         if m.get("status") == "GREEN":
             return "Ok"
@@ -276,6 +303,11 @@ class WaterGuruAlertSensor(WaterGuruSensor):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
+
+        # Check if the measurement exists before accessing it
+        if (self._id not in self.coordinator.data or
+            self._waterguru_key not in self.coordinator.data[self._id].measurements):
+            return "mdi:alert-outline"
 
         m = self.coordinator.data[self._id].measurements[self._waterguru_key]
         if m.get("status") == "GREEN":
@@ -288,6 +320,10 @@ class WaterGuruLastMeasurementSensor(WaterGuruBaseSensor):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
+
+        # Check if the device data exists
+        if self._id not in self.coordinator.data:
+            return None
 
         strTs = self.coordinator.data[self._id].last_measurement_time
         if strTs is None:
