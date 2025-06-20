@@ -83,7 +83,7 @@ async def async_setup_entry(
 
     coordinator: WaterGuruDataCoordinatorType = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    entities: list[WaterGuruBaseSensor] = [
         WaterGuruSensor(
             coordinator,
             waterguru_device,
@@ -105,7 +105,9 @@ async def async_setup_entry(
                         key=measurement["type"],
                         translation_key=measurement["type"],
                         name=measurement["title"],
-                        device_class=(SensorDeviceClass.PH if measurement["type"] == "PH" else None),
+                        device_class=(
+                            SensorDeviceClass.PH if measurement["type"] == "PH" else None
+                        ),
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=measurement["cfg"].get("unit"),
                         suggested_display_precision=measurement["cfg"].get("decPlaces"),
@@ -123,35 +125,34 @@ async def async_setup_entry(
                         name=measurement["title"] + " Alert",
                         entity_category=EntityCategory.DIAGNOSTIC,
                     ),
-                    measurement["type"]
+                    measurement["type"],
                 )
             )
 
-    entities.append(
-        WaterGuruOverallStatusSensor(
-            coordinator,
-            waterguru_device,
-            SensorEntityDescription(
-                key="status",
-                translation_key="alert",
-                name="Status",
-                entity_category=EntityCategory.DIAGNOSTIC,
-            ),
+        entities.append(
+            WaterGuruOverallStatusSensor(
+                coordinator,
+                waterguru_device,
+                SensorEntityDescription(
+                    key="status",
+                    translation_key="alert",
+                    name="Status",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                ),
+            )
         )
-    )
-
-    entities.append(
-        WaterGuruLastMeasurementSensor(
-            coordinator,
-            waterguru_device,
-            SensorEntityDescription(
-                key="last_measurement",
-                name="Last Measurement",
-                entity_category=EntityCategory.DIAGNOSTIC,
-                device_class=SensorDeviceClass.TIMESTAMP,
-            ),
+        entities.append(
+            WaterGuruLastMeasurementSensor(
+                coordinator,
+                waterguru_device,
+                SensorEntityDescription(
+                    key="last_measurement",
+                    name="Last Measurement",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    device_class=SensorDeviceClass.TIMESTAMP,
+                ),
+            )
         )
-    )
 
     async_add_entities(entities)
 
