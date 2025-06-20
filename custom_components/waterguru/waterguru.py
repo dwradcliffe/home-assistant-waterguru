@@ -73,7 +73,10 @@ class WaterGuru:
         region = 'us-west-2'
 
         auth = AWS4Auth(access_key_id, secret_key, region, service, session_token=session_token)
-        response = requests.request(method, url, auth=auth, json=body, headers=headers)
+        try:
+            response = requests.request(method, url, auth=auth, json=body, headers=headers, timeout=9.9)
+        except requests.exceptions.Timeout as e:
+            raise WaterGuruApiError("Timeout while accessing WaterGuru API") from e
 
         data = response.json()
         return {waterBodyData['waterBodyId']: WaterGuruDevice(waterBodyData) for waterBodyData in data['waterBodies']}
