@@ -23,7 +23,7 @@ class WaterGuru:
         self._username = username
         self._password = password
         self._session = session
-        
+
     def _get_auth_and_user(self):
         """Handle AWS Cognito authentication and return auth object and userId."""
         region_name = "us-west-2"
@@ -35,7 +35,7 @@ class WaterGuru:
         boto3.setup_default_session(region_name = region_name)
         client = boto3.client('cognito-idp', region_name=region_name)
         aws = AWSSRP(username=self._username, password=self._password, pool_id=pool_id, client_id=client_id, client=client)
-        
+
         try:
             tokens = aws.authenticate_user()
         except botocore.exceptions.ClientError as e:
@@ -44,7 +44,7 @@ class WaterGuru:
         id_token = tokens['AuthenticationResult']['IdToken']
         refresh_token = tokens['AuthenticationResult']['RefreshToken']
         access_token = tokens['AuthenticationResult']['AccessToken']
-        
+
         u = Cognito(pool_id, client_id, id_token=id_token, refresh_token=refresh_token, access_token=access_token)
         user = u.get_user()
         userId = user._metadata['username']
@@ -56,15 +56,15 @@ class WaterGuru:
 
         credentials_response = identity_client.get_credentials_for_identity(IdentityId=identity_id, Logins={idp_pool:id_token})
         credentials = credentials_response['Credentials']
-        
+
         auth = AWS4Auth(
-            credentials['AccessKeyId'], 
-            credentials['SecretKey'], 
-            region_name, 
-            'lambda', 
+            credentials['AccessKeyId'],
+            credentials['SecretKey'],
+            region_name,
+            'lambda',
             session_token=credentials['SessionToken']
         )
-        
+
         return auth, userId
 
     def get(self):

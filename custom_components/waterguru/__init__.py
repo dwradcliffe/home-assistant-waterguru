@@ -46,8 +46,8 @@ def _async_check_cassette_repairs(
 
     for device_id, device in devices.items():
         issue_id = f"{CASSETTE_ISSUE_PREFIX}{device_id}"
-        
-        # Evaluate percentage instead of conditional days text
+
+        # Evaluate percentage instead of conditional days tex
         # WaterGuru reports this as going negative once the cassette is overdue,
         # so treat anything at or below 0 as empty rather than requiring an exact match.
         pct_remaining = device.sensors.get("cassette")
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=_update_method,
         update_interval=INTERVAL,
     )
-    
+
     # Expose the API client to other platforms
     coordinator.api = waterguru
 

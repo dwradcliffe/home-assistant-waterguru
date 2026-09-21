@@ -27,6 +27,9 @@
             "title": "Replace the WaterGuru cassette",
             "description": "The cassette for {name} is empty. Replace the physical cassette and submit this form to reset the sensor."
           }
+        },
+        "abort": {
+          "entity_not_found": "Could not find the reset button entity for this device."
         }
       }
     }

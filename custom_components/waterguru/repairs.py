@@ -34,11 +34,12 @@ class CassetteEmptyRepairFlow(RepairsFlow):
             button_unique_id = f"{device_id}_replace_cassette"
             button_entity_id = registry.async_get_entity_id("button", DOMAIN, button_unique_id)
 
-            # Execute action: button.press
-            if button_entity_id:
-                await self.hass.services.async_call(
-                    "button", "press", {"entity_id": button_entity_id}
-                )
+            if button_entity_id is None:
+                return self.async_abort(reason="entity_not_found")
+
+            await self.hass.services.async_call(
+                "button", "press", {"entity_id": button_entity_id}
+            )
 
             return self.async_create_entry(title="", data={})
 
