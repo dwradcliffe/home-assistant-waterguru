@@ -110,6 +110,9 @@ class WaterGuru:
         except requests.exceptions.Timeout as e:
             raise WaterGuruApiError("Timeout while accessing WaterGuru API") from e
 
+        if response.status_code not in (200, 202):
+            raise WaterGuruApiError(f"Failed to reset cassette: {response.status_code} - {response.text}")
+
     def measure(self, pod_id: str) -> None:
         """Trigger a manual measurement via AWS Lambda invocation."""
         _LOGGER.info("Triggering manual measurement on WaterGuru pod %s...", pod_id)
@@ -137,6 +140,3 @@ class WaterGuru:
 
         if response.status_code not in (200, 202):
             raise WaterGuruApiError(f"Failed to trigger measurement: {response.status_code} - {response.text}")
-
-        if response.status_code not in (200, 202):
-            raise WaterGuruApiError(f"Failed to reset cassette: {response.status_code} - {response.text}")
