@@ -48,9 +48,11 @@ def _async_check_cassette_repairs(
         issue_id = f"{CASSETTE_ISSUE_PREFIX}{device_id}"
         
         # Evaluate percentage instead of conditional days text
+        # WaterGuru reports this as going negative once the cassette is overdue,
+        # so treat anything at or below 0 as empty rather than requiring an exact match.
         pct_remaining = device.sensors.get("cassette")
-        
-        if pct_remaining == 0:
+
+        if pct_remaining is not None and pct_remaining <= 0:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -59,6 +61,7 @@ def _async_check_cassette_repairs(
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="cassette_empty",
                 translation_placeholders={"name": device.name},
+                data={"device_id": device_id, "name": device.name},
             )
         else:
             ir.async_delete_issue(hass, DOMAIN, issue_id)

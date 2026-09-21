@@ -21,12 +21,11 @@
   "issues": {
     "cassette_empty": {
       "title": "Replace the WaterGuru cassette",
-      "description": "The cassette for {name} is empty. Replacing the cassette physically and submitting this form will reset the sensor.",
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "Reset Cassette",
-            "description": "Confirm that you have physically replaced the cassette for {name}."
+            "title": "Replace the WaterGuru cassette",
+            "description": "The cassette for {name} is empty. Replace the physical cassette and submit this form to reset the sensor."
           }
         }
       }

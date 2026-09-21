@@ -24,15 +24,16 @@ class CassetteEmptyRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
+        assert self.data is not None
+        device_id = self.data["device_id"]
+        name = self.data["name"]
+
         if user_input is not None:
-            # Extract the device ID from the issue ID
-            device_id = self.issue_id.replace(CASSETTE_ISSUE_PREFIX, "")
-            
             # Lookup the button's entity_id
             registry = er.async_get(self.hass)
             button_unique_id = f"{device_id}_replace_cassette"
             button_entity_id = registry.async_get_entity_id("button", DOMAIN, button_unique_id)
-            
+
             # Execute action: button.press
             if button_entity_id:
                 await self.hass.services.async_call(
@@ -41,7 +42,11 @@ class CassetteEmptyRepairFlow(RepairsFlow):
 
             return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders={"name": name},
+        )
 
 async def async_create_fix_flow(
     hass: HomeAssistant,
