@@ -12,7 +12,7 @@ This integration requires Home Assistant 2024.4 or later.
 
 ### Cassette Replacement
 The integration provides a native button entity to reset the cassette life to 100% after a physical replacement. 
-* **Repair Flow:** When the API reports a cassette is empty, Home Assistant will automatically generate a repair issue. Clicking through this repair flow prompts you to confirm the physical replacement and automatically triggers the reset.
+* **Repair Flow:** When the API reports a cassette is empty, Home Assistant will automatically generate a repair issue. Opening the repair gives you the choice to confirm the physical replacement (which automatically triggers the reset) or ignore the issue for now; ignored issues stay hidden until the cassette is refilled and reported empty again.
 * **Safety Override:** To prevent accidental resets, the reset button will fail to execute if the cassette is not completely empty. To replace a cassette early, you must first toggle on the "Temporarily Allow Early Cassette Replacement" switch before pressing the reset button.
 
 ### Manual Measurement

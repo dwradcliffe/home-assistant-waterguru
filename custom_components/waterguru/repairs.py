@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, CASSETTE_ISSUE_PREFIX
 
@@ -18,7 +19,22 @@ class CassetteEmptyRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_confirm()
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders={"name": self.data["name"]},
+        )
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Ignore the issue until it's recreated."""
+        try:
+            ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        except KeyError:
+            # The issue was deleted (e.g. cassette refilled or integration
+            # unloaded) while this flow was open.
+            pass
+        return self.async_abort(reason="ignored")
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
