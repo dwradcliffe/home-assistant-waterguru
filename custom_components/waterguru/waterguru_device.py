@@ -1,3 +1,18 @@
+import re
+
+# timeLeftText is free text from the API, e.g. "12 days left", "7 weeks left", "5 months left".
+_TIME_LEFT_RE = re.compile(r"^\s*(\d+)\s*(day|week|month)s?\b", re.IGNORECASE)
+_DAYS_PER_UNIT = {"day": 1, "week": 7, "month": 30}
+
+
+def _parse_days_remaining(text):
+    """Convert timeLeftText to a number of days, or None if the format is not recognized."""
+    match = _TIME_LEFT_RE.match(text) if isinstance(text, str) else None
+    if match is None:
+        return None
+    return int(match.group(1)) * _DAYS_PER_UNIT[match.group(2).lower()]
+
+
 class WaterGuruDevice:
     """Representation of a WaterGuru device."""
 
@@ -15,12 +30,7 @@ class WaterGuruDevice:
             if r['type'] == 'LAB':
                 self._standard_sensors['cassette'] = r['pctLeft']
                 if 'timeLeftText' in r:
-                    number = int(r['timeLeftText'].split()[0])
-                    if "weeks" in r['timeLeftText']:
-                        number = number * 7
-                    elif "months" in r['timeLeftText']:
-                        number = number * 30
-                    self._standard_sensors['cassette_days_remaining'] = number
+                    self._standard_sensors['cassette_days_remaining'] = _parse_days_remaining(r['timeLeftText'])
         self._measurements = {measurement['type']: measurement for measurement in self._data.get('measurements', [])}
 
     @property
